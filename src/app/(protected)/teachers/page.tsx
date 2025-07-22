@@ -1,5 +1,6 @@
 "use client";
 import { PencilIcon } from "lucide-react";
+import { Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 import swal from "sweetalert";
 
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { TableLoader } from "@/components/ui/TableLoader";
 import { apiFetch } from "@/lib/api";
+import { deleteProfessor } from "@/lib/apiActions";
 import { PaginatedResponse, Professor, Student } from "@/types/api";
 
 import { TeacherModal } from "./TeacherModal";
@@ -39,6 +41,7 @@ export default function TeachersPage() {
   );
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
 
   async function fetchTeachers(page: number) {
     setLoading(true);
@@ -84,6 +87,35 @@ export default function TeachersPage() {
       });
     } finally {
       setActionLoadingId(null);
+    }
+  };
+
+  const handleDeleteProfessor = async (prof: Professor) => {
+    const confirm = await swal({
+      title: "Are you sure?",
+      text: `This will permanently delete the professor ${prof.full_name}.`,
+      icon: "warning",
+      buttons: ["Cancel", "Delete"],
+      dangerMode: true,
+    });
+    if (!confirm) return;
+    setDeleteLoadingId(prof.id ?? null);
+    try {
+      await deleteProfessor(prof.id!);
+      swal({
+        title: "Deleted!",
+        text: "Professor deleted successfully!",
+        icon: "success",
+      });
+      await fetchTeachers(page);
+    } catch (error) {
+      swal({
+        title: "Error!",
+        text: (error as Error)?.message || "Delete failed",
+        icon: "error",
+      });
+    } finally {
+      setDeleteLoadingId(null);
     }
   };
 
@@ -183,13 +215,31 @@ export default function TeachersPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEdit(teacher)}
-                    >
-                      <PencilIcon className="w-4 h-4" /> Edit
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="cursor-pointer"
+                        onClick={() => openEdit(teacher)}
+                      >
+                        <PencilIcon className="w-4 h-4" /> Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-red-500 text-red-600 hover:bg-red-500 hover:text-white hover:border-red-500 cursor-pointer"
+                        disabled={deleteLoadingId === teacher.id}
+                        onClick={() => handleDeleteProfessor(teacher)}
+                      >
+                        {deleteLoadingId === teacher.id ? (
+                          "Deleting..."
+                        ) : (
+                          <>
+                            <Trash2Icon className="w-4 h-4 mr-1" /> Delete
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

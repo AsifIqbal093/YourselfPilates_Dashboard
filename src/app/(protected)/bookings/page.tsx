@@ -1,6 +1,8 @@
 "use client";
 import { PencilIcon } from "lucide-react";
+import { Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
+import swal from "sweetalert";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import { TableLoader } from "@/components/ui/TableLoader";
 import { apiFetch } from "@/lib/api";
-import { cancelBookingById } from "@/lib/apiActions";
+import { cancelBookingById, deleteBooking } from "@/lib/apiActions";
 import { Booking, PaginatedResponse } from "@/types/api";
 
 import { BookingModal } from "./BookingModal";
@@ -48,6 +50,37 @@ export default function BookingsPage() {
       console.error(error);
     } finally {
       setCancelLoadingId(null);
+    }
+  };
+
+  const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
+
+  const handleDeleteBooking = async (bookingId: number) => {
+    const confirm = await swal({
+      title: "Are you sure?",
+      text: "This will permanently delete the booking.",
+      icon: "warning",
+      buttons: ["Cancel", "Delete"],
+      dangerMode: true,
+    });
+    if (!confirm) return;
+    setDeleteLoadingId(bookingId);
+    try {
+      await deleteBooking(bookingId);
+      swal({
+        title: "Deleted!",
+        text: "Booking deleted successfully!",
+        icon: "success",
+      });
+      await fetchBookings(page);
+    } catch (error) {
+      swal({
+        title: "Error!",
+        text: (error as Error)?.message || "Delete failed",
+        icon: "error",
+      });
+    } finally {
+      setDeleteLoadingId(null);
     }
   };
 
@@ -163,14 +196,31 @@ export default function BookingsPage() {
                       </Button>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        className="cursor-pointer"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEdit(booking)}
-                      >
-                        <PencilIcon className="w-4 h-4 mr-1" /> Edit
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          className="cursor-pointer"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEdit(booking)}
+                        >
+                          <PencilIcon className="w-4 h-4 mr-1" /> Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-500 text-red-600 hover:bg-red-500 hover:text-white hover:border-red-500 cursor-pointer"
+                          disabled={deleteLoadingId === booking.id}
+                          onClick={() => handleDeleteBooking(booking.id)}
+                        >
+                          {deleteLoadingId === booking.id ? (
+                            "Deleting..."
+                          ) : (
+                            <>
+                              <Trash2Icon className="w-4 h-4 mr-1" /> Delete
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

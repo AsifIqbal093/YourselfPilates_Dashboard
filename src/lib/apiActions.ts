@@ -55,6 +55,66 @@ export async function deleteVideo(id: number) {
   return response;
 }
 
+export async function deleteBooking(id: number) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/booking/bookings/${id}/`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to delete booking");
+  }
+
+  return response;
+}
+
+export async function deleteStudent(id: number) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/students/${id}/`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to delete student");
+  }
+
+  return response;
+}
+
+export async function deleteProfessor(id: number) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/users/${id}/`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to delete professor");
+  }
+
+  return response;
+}
+
 export async function uploadVideo({
   file,
   title,

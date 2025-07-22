@@ -1,6 +1,8 @@
 "use client";
 import { PencilIcon } from "lucide-react";
+import { Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
+import swal from "sweetalert";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { TableLoader } from "@/components/ui/TableLoader";
 import { apiFetch } from "@/lib/api";
+import { deleteStudent } from "@/lib/apiActions";
 import { PaginatedResponse, Student } from "@/types/api";
 
 import { StudentModal } from "./StudentModal";
@@ -34,6 +37,7 @@ export default function StudentsPage() {
     data: null,
   });
   const [loading, setLoading] = useState(true);
+  const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
 
   async function fetchStudents(page: number) {
     setLoading(true);
@@ -55,6 +59,35 @@ export default function StudentsPage() {
   const openAdd = () => setModal({ open: true, data: null });
   const openEdit = (student: Student) =>
     setModal({ open: true, data: student });
+
+  const handleDeleteStudent = async (student: Student) => {
+    const confirm = await swal({
+      title: "Are you sure?",
+      text: `This will permanently delete the student ${student.full_name}.`,
+      icon: "warning",
+      buttons: ["Cancel", "Delete"],
+      dangerMode: true,
+    });
+    if (!confirm) return;
+    setDeleteLoadingId(student.id);
+    try {
+      await deleteStudent(student.id);
+      swal({
+        title: "Deleted!",
+        text: "Student deleted successfully!",
+        icon: "success",
+      });
+      await fetchStudents(page);
+    } catch (error) {
+      swal({
+        title: "Error!",
+        text: (error as Error)?.message || "Delete failed",
+        icon: "error",
+      });
+    } finally {
+      setDeleteLoadingId(null);
+    }
+  };
 
   const totalPages = Math.ceil(count / 10); // assuming 10 per page
 
@@ -81,20 +114,37 @@ export default function StudentsPage() {
             </TableHeader>
             <TableBody>
               {students.map((student) => (
-                <TableRow key={student.email}>
+                <TableRow key={student.id}>
                   <TableCell>{student.email}</TableCell>
                   <TableCell>{student.full_name}</TableCell>
                   {/* <TableCell>{student.role}</TableCell>
                   <TableCell>{student.bio || "-"}</TableCell> */}
                   <TableCell>{student.contact_number || "-"}</TableCell>
                   <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEdit(student)}
-                    >
-                      <PencilIcon className="w-4 h-4" /> Edit
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEdit(student)}
+                      >
+                        <PencilIcon className="w-4 h-4" /> Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-red-500 text-red-600 hover:bg-red-500 hover:text-white hover:border-red-500 cursor-pointer"
+                        disabled={deleteLoadingId === student.id}
+                        onClick={() => handleDeleteStudent(student)}
+                      >
+                        {deleteLoadingId === student.id ? (
+                          "Deleting..."
+                        ) : (
+                          <>
+                            <Trash2Icon className="w-4 h-4 mr-1" /> Delete
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -129,14 +179,16 @@ export default function StudentsPage() {
           </Pagination>
         </>
       )}
-      <StudentModal
-        open={modal.open}
-        onOpenChange={(open) =>
-          setModal({ open, data: open ? modal.data : null })
-        }
-        onSuccess={() => fetchStudents(page)}
-        initialData={modal.data}
-      />
+      {modal.open && (
+        <StudentModal
+          open={modal.open}
+          onOpenChange={(open) =>
+            setModal({ open, data: open ? modal.data : null })
+          }
+          onSuccess={() => fetchStudents(page)}
+          initialData={modal.data}
+        />
+      )}
     </div>
   );
 }

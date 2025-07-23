@@ -44,7 +44,7 @@ interface CalendarEvent {
   id: string;
   title: string;
   start: string;
-  status: "confirmed" | "cancelled";
+  status: "confirmed" | "cancelled" | "approved";
   color?: string;
   backgroundColor?: string;
   extendedProps: {
@@ -57,12 +57,12 @@ interface CalendarEvent {
   };
 }
 
-// Only two colors: green for confirmed, red for cancelled/others
+// Only two colors: green for confirmed/approved, red for cancelled
 function getEventColors(event: CalendarEvent): {
   color?: string;
   backgroundColor?: string;
 } {
-  if (event.status === "confirmed") {
+  if (event.status !== "cancelled") {
     return { color: "#4caf50", backgroundColor: "#c8e6c9" };
   } else {
     return { color: "#f44336", backgroundColor: "#ffcdd2" };
@@ -82,11 +82,21 @@ function formatBookingToCalendarEvent(booking: BookingEvent): CalendarEvent {
   const [hours, minutes] = startTime.split(":");
   startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
+  // Determine status: cancelled, approved, or confirmed
+  let status: "confirmed" | "cancelled" | "approved";
+  if (booking.status === "cancelled") {
+    status = "cancelled";
+  } else if (booking.approve) {
+    status = "approved";
+  } else {
+    status = "confirmed";
+  }
+
   const event: CalendarEvent = {
     id: booking.id.toString(),
     title: title,
     start: startDate.toISOString(),
-    status: booking.status,
+    status: status,
     extendedProps: {
       bookingId: booking.id,
       professor: booking.professor_details.full_name,
@@ -142,13 +152,22 @@ export default function Calendar() {
 
   const handleEventClick = (arg: EventClickArg) => {
     const event = arg.event;
+    // Determine status for event click as well
+    let status: "confirmed" | "cancelled" | "approved";
+    if (event.extendedProps.status) {
+      status = event.extendedProps.status;
+    } else if (event.extendedProps.approved) {
+      status = "approved";
+    } else if (event.backgroundColor === "#c8e6c9") {
+      status = "confirmed";
+    } else {
+      status = "cancelled";
+    }
     setSelectedBooking({
       id: event.id,
       title: event.title,
       start: event.startStr,
-      status:
-        event.extendedProps.status ||
-        (event.backgroundColor === "#c8e6c9" ? "confirmed" : "cancelled"),
+      status: status,
       color: event.backgroundColor === "#c8e6c9" ? "#4caf50" : "#f44336",
       backgroundColor: event.backgroundColor,
       extendedProps: event.extendedProps as CalendarEvent["extendedProps"],

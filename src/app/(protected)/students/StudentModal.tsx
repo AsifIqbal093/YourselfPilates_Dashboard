@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
-import { PaginatedResponse, Professor, Student } from "@/types/api";
+import { Professor, Student } from "@/types/api";
 
 interface StudentModalProps {
   open: boolean;
@@ -67,8 +67,20 @@ export function StudentModal({
 
   useEffect(() => {
     setLoadingProfessors(true);
-    apiFetch<PaginatedResponse<Professor>>("/user/users/?role=professor")
-      .then((res) => setProfessors(res.results || []))
+    apiFetch<unknown>("/user/users/?role=professor&show_all=true")
+      .then((res) => {
+        if (Array.isArray(res)) {
+          setProfessors(res as Professor[]);
+        } else if (
+          res &&
+          typeof res === "object" &&
+          Array.isArray((res as { results?: unknown }).results)
+        ) {
+          setProfessors((res as { results: Professor[] }).results);
+        } else {
+          setProfessors([]);
+        }
+      })
       .catch(() => setProfessors([]))
       .finally(() => setLoadingProfessors(false));
   }, []);

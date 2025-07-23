@@ -13,13 +13,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { TableLoader } from "@/components/ui/TableLoader";
 import { apiFetch } from "@/lib/api";
 import { getTodayDateString } from "@/lib/utils";
-import {
-  Booking,
-  PaginatedResponse,
-  Professor,
-  Slot,
-  Student,
-} from "@/types/api";
+import { Booking, Professor, Slot, Student } from "@/types/api";
 
 const bookingSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -108,8 +102,20 @@ export function BookingModal({
   // Fetch professors on mount
   useEffect(() => {
     setLoadingProfessors(true);
-    apiFetch<PaginatedResponse<Professor>>("/user/users/?role=professor")
-      .then((res) => setProfessors(res.results || []))
+    apiFetch<unknown>("/user/users/?role=professor&show_all=true")
+      .then((res) => {
+        if (Array.isArray(res)) {
+          setProfessors(res as Professor[]);
+        } else if (
+          res &&
+          typeof res === "object" &&
+          Array.isArray((res as { results?: unknown }).results)
+        ) {
+          setProfessors((res as { results: Professor[] }).results);
+        } else {
+          setProfessors([]);
+        }
+      })
       .catch(() => setProfessors([]))
       .finally(() => setLoadingProfessors(false));
   }, []);

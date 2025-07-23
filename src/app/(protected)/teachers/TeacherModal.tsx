@@ -28,7 +28,7 @@ const teacherSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   country: z.string().optional(),
-  zipcode: z.string().optional(),
+  zipcode: z.string().min(1, "Zipcode is required"),
   // photo: z.any().optional(),
 });
 
@@ -205,6 +205,11 @@ export function TeacherModal({
         <div>
           <Label>Zipcode</Label>
           <Input {...register("zipcode")} />
+          {errors.zipcode && (
+            <span className="text-red-500 text-xs">
+              {errors.zipcode.message}
+            </span>
+          )}
         </div>
         {/*
         <div>

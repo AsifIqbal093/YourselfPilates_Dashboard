@@ -95,7 +95,9 @@ export default function StudentsPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2>Students</h2>
-        <Button onClick={openAdd}>Add Student</Button>
+        <Button onClick={openAdd} className="cursor-pointer">
+          Add Student
+        </Button>
       </div>
       {loading ? (
         <TableLoader />
@@ -126,6 +128,7 @@ export default function StudentsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => openEdit(student)}
+                        className="cursor-pointer"
                       >
                         <PencilIcon className="w-4 h-4" /> Edit
                       </Button>

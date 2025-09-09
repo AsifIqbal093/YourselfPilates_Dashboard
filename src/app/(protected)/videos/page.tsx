@@ -94,7 +94,10 @@ const Videos = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Videos</h2>
-        <Button onClick={() => setUploadModalOpen(true)}>
+        <Button
+          onClick={() => setUploadModalOpen(true)}
+          className="cursor-pointer"
+        >
           <UploadCloudIcon className="mr-2 w-4 h-4" /> Upload Video
         </Button>
       </div>
@@ -186,7 +189,11 @@ const Videos = () => {
               <div className="text-red-500 text-sm">{uploadError}</div>
             )}
             <DialogFooter>
-              <Button type="submit" disabled={uploading} className="w-full">
+              <Button
+                type="submit"
+                disabled={uploading}
+                className="w-full cursor-pointer"
+              >
                 {uploading ? (
                   <Loader2 className="animate-spin w-4 h-4 mr-2" />
                 ) : null}

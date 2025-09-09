@@ -185,20 +185,20 @@ export function ChartAreaInteractive() {
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
-              className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
+              className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden cursor-pointer"
               size="sm"
               aria-label="Select a value"
             >
               <SelectValue placeholder="Last 3 months" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value="90d" className="rounded-lg">
+              <SelectItem value="90d" className="rounded-lg cursor-pointer">
                 Last 3 months
               </SelectItem>
-              <SelectItem value="30d" className="rounded-lg">
+              <SelectItem value="30d" className="rounded-lg cursor-pointer">
                 Last 30 days
               </SelectItem>
-              <SelectItem value="7d" className="rounded-lg">
+              <SelectItem value="7d" className="rounded-lg cursor-pointer">
                 Last 7 days
               </SelectItem>
             </SelectContent>

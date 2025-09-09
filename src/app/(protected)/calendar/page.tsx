@@ -238,6 +238,10 @@ export default function Calendar() {
         .fc .fc-event-title {
           font-weight: 500;
         }
+.fc-col-header-cell[role="columnheader"]{
+  background-color: #004481 !important;
+  color: #ffffff !important;
+}
       `}</style>
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}

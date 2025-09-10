@@ -149,7 +149,7 @@ export function StudentModal({
                 {...field}
                 onChange={(e) => field.onChange(Number(e.target.value))}
                 value={field.value}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 dark:bg-black"
                 disabled={loadingProfessors || isSubmitting}
               >
                 <option value={0}>Select Professor</option>
@@ -192,7 +192,11 @@ export function StudentModal({
             </span>
           )}
         </div>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="cursor-pointer"
+        >
           {isEdit ? "Edit Student" : "Add Student"}
         </Button>
         {error && <div className="text-red-500">{error}</div>}

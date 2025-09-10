@@ -38,7 +38,6 @@ export default function BookingsPage() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Cancel booking handler
   const [cancelLoadingId, setCancelLoadingId] = useState<number | null>(null);
   const handleCancelBooking = async (bookingId: number) => {
     setCancelLoadingId(bookingId);
@@ -124,7 +123,9 @@ export default function BookingsPage() {
     <div>
       <div className="flex justify-between items-center mb-4 px-4">
         <h2 className="text-2xl font-bold">Bookings</h2>
-        <Button onClick={openAdd}>Adicionar Nova Marcação</Button>
+        <Button onClick={openAdd} className="cursor-pointer">
+          Adicionar Nova Marcação
+        </Button>
       </div>
       {loading ? (
         <TableLoader />
@@ -163,7 +164,8 @@ export default function BookingsPage() {
                       {new Date(booking.created_at).toLocaleString()}
                     </TableCell>
                     <TableCell>
-                      {new Date(booking.booking_date).toLocaleString()}
+                      {new Date(booking.booking_date).toLocaleDateString()}{" "}
+                      {booking.time_slot}
                     </TableCell>
 
                     {/* <TableCell>

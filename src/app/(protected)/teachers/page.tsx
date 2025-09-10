@@ -125,7 +125,9 @@ export default function TeachersPage() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2>Teachers</h2>
-        <Button onClick={openAdd}>Add Teacher</Button>
+        <Button onClick={openAdd} className="cursor-pointer">
+          Add Teacher
+        </Button>
       </div>
       {loading ? (
         <TableLoader />

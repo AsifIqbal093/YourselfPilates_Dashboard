@@ -247,12 +247,18 @@ export function BookingModal({
                 <select
                   {...field}
                   onChange={(e) => field.onChange(parseInt(e.target.value))}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 dark:bg-black"
                   disabled={formLoading}
                 >
-                  <option value="">Select Professor</option>
+                  <option value="" className="dark:bg-black">
+                    Select Professor
+                  </option>
                   {professors.map((prof) => (
-                    <option key={prof.id} value={prof.id}>
+                    <option
+                      key={prof.id}
+                      value={prof.id}
+                      className="dark:bg-black"
+                    >
                       {prof.full_name}
                     </option>
                   ))}
@@ -323,12 +329,18 @@ export function BookingModal({
               render={({ field }) => (
                 <select
                   {...field}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 dark:bg-black"
                   disabled={formLoading || !bookingDate}
                 >
-                  <option value="">Select Time Slot</option>
+                  <option value="" className="dark:bg-black">
+                    {initialData ? initialData.time_slot : "Select Time Slot"}
+                  </option>
                   {slots.map((slot) => (
-                    <option key={slot.value} value={slot.value}>
+                    <option
+                      key={slot.value}
+                      value={slot.value}
+                      className="dark:bg-black"
+                    >
                       {slot.display}
                     </option>
                   ))}
@@ -380,7 +392,7 @@ export function BookingModal({
         <Button
           type="submit"
           disabled={isSubmitting || formLoading}
-          className="w-full"
+          className="w-full cursor-pointer"
         >
           {formLoading ? "Saving..." : initialData ? "Save" : "Add"}
         </Button>

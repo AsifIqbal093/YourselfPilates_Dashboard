@@ -225,7 +225,11 @@ export function TeacherModal({
           />
         </div>
         */}
-        <Button type="submit" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="cursor-pointer"
+        >
           {isEdit ? "Edit Professor" : "Add Professor"}
         </Button>
         {error && <div className="text-red-500">{error}</div>}

@@ -72,6 +72,11 @@ const data = {
       url: "/videos",
       icon: IconVideo,
     },
+    {
+      title: "Packs",
+      url: "/packs",
+      icon: IconCalendar,
+    },
   ],
   navClouds: [
     {

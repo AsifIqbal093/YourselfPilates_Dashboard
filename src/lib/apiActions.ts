@@ -149,3 +149,141 @@ export async function uploadVideo({
   }
   return res.json();
 }
+
+export interface Pack {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  active: boolean;
+  price: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PaginatedPackResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Pack[];
+}
+
+export interface CreatePackPayload {
+  title: string;
+  description: string;
+  image?: File | string;
+  active: boolean;
+  price: string;
+}
+
+export async function getPacks(page = 1): Promise<PaginatedPackResponse> {
+  return apiFetch(`/subscriptions/packs/?page=${page}`);
+}
+
+export async function getPackById(id: number): Promise<Pack> {
+  return apiFetch(`/subscriptions/packs/${id}/`);
+}
+
+export async function createPack(
+  payload: CreatePackPayload & { image?: File }
+): Promise<Pack> {
+  const { accessToken } = useAuthStore.getState();
+  if (!accessToken) throw new Error("No access token");
+
+  const formData = new FormData();
+  formData.append("title", payload.title);
+  formData.append("description", payload.description);
+  formData.append("active", payload.active.toString());
+  formData.append("price", payload.price);
+
+  if (payload.image instanceof File) {
+    formData.append("image", payload.image);
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/subscriptions/packs/`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        // Don't set Content-Type for FormData, browser will set it with boundary
+      },
+      body: formData,
+      credentials: "include",
+    }
+  );
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to create pack");
+  }
+
+  return res.json();
+}
+
+export async function updatePack(
+  id: number,
+  payload: Partial<CreatePackPayload> & { image?: File }
+): Promise<Pack> {
+  const { accessToken } = useAuthStore.getState();
+  if (!accessToken) throw new Error("No access token");
+
+  const formData = new FormData();
+
+  if (payload.title !== undefined) {
+    formData.append("title", payload.title);
+  }
+  if (payload.description !== undefined) {
+    formData.append("description", payload.description);
+  }
+  if (payload.active !== undefined) {
+    formData.append("active", payload.active.toString());
+  }
+  if (payload.price !== undefined) {
+    formData.append("price", payload.price);
+  }
+
+  if (payload.image instanceof File) {
+    formData.append("image", payload.image);
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/subscriptions/packs/${id}/`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        // Don't set Content-Type for FormData, browser will set it with boundary
+      },
+      body: formData,
+      credentials: "include",
+    }
+  );
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to update pack");
+  }
+
+  return res.json();
+}
+
+export async function deletePack(id: number) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/subscriptions/packs/${id}/`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+      },
+      credentials: "include",
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to delete pack");
+  }
+
+  return response;
+}

@@ -112,6 +112,14 @@ export function PackCard({
           </span>
           {/* <span className="text-sm text-muted-foreground">/session</span> */}
         </div>
+        {pack.total_hours !== undefined && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            Credit Hours:{" "}
+            <span className="font-semibold text-foreground">
+              {pack.total_hours}
+            </span>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row gap-2 pt-0">
         <Button
@@ -121,13 +129,6 @@ export function PackCard({
         >
           Subscribe
         </Button>
-        {/* <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={() => onSubscribe?.(pack)}
-        >
-          Learn more
-        </Button> */}
       </CardFooter>
     </Card>
   );

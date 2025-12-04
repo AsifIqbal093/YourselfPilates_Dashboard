@@ -38,6 +38,10 @@ const packSchema = z.object({
     .number({ required_error: "Price is required" })
     .positive("Price must be greater than 0"),
   active: z.boolean(),
+  creditHours: z
+    .number({ required_error: "Credit Hours is required" })
+    .int("Credit Hours must be a whole number")
+    .min(0, "Credit Hours must be 0 or greater"),
 });
 
 type PackFormValues = z.infer<typeof packSchema>;
@@ -68,12 +72,14 @@ export function PackModal({
           description: initialData?.description || "",
           price: initialData?.price ? parseFloat(initialData.price) : 0,
           active: initialData?.active ?? true,
+          creditHours: initialData?.total_hours ?? 0,
         }
       : {
           title: "",
           description: "",
           price: 0,
           active: true,
+          creditHours: 0,
         },
   });
 
@@ -86,6 +92,7 @@ export function PackModal({
         description: initialData.description || "",
         price: initialData.price ? parseFloat(initialData.price) : 0,
         active: initialData.active ?? true,
+        creditHours: initialData.total_hours ?? 0,
       });
       setImagePreview(initialData.image || null);
     } else {
@@ -94,6 +101,7 @@ export function PackModal({
         description: "",
         price: 0,
         active: true,
+        creditHours: 0,
       });
       setImagePreview(null);
     }
@@ -144,6 +152,11 @@ export function PackModal({
       return;
     }
 
+    if (data.creditHours < 0) {
+      setError("Credit Hours must be 0 or greater");
+      return;
+    }
+
     if (!imageFile && !isEdit) {
       setError("Image is required");
       return;
@@ -155,9 +168,10 @@ export function PackModal({
         description: data.description.trim(),
         active: data.active,
         price: data.price.toString(),
+        total_hours: data.creditHours,
         ...(imageFile && { image: imageFile }),
       };
-
+      console.log("Payload:", payload);
       if (isEdit && initialData?.id) {
         await updatePack(Number(initialData.id), payload);
       } else {
@@ -266,6 +280,27 @@ export function PackModal({
           />
           {errors.price && (
             <span className="text-red-500 text-xs">{errors.price.message}</span>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="creditHours">
+            Credit Hours <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="creditHours"
+            type="number"
+            step="1"
+            min="0"
+            {...register("creditHours", { valueAsNumber: true })}
+            placeholder="2"
+            disabled={isSubmitting}
+            required
+          />
+          {errors.creditHours && (
+            <span className="text-red-500 text-xs">
+              {errors.creditHours.message}
+            </span>
           )}
         </div>
 

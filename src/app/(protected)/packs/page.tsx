@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { CheckCircle2Icon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { PackCard } from "@/components/PackCard";
@@ -13,7 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { deletePack, getPacks, Pack, updatePack } from "@/lib/apiActions";
+import {
+  deletePack,
+  getPacks,
+  Pack,
+  subscribeToPack,
+  updatePack,
+} from "@/lib/apiActions";
 
 import { PackModal } from "./PackModal";
 
@@ -25,6 +31,10 @@ export default function PacksPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [packToDelete, setPackToDelete] = useState<Pack | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [subscribedPackName, setSubscribedPackName] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     fetchPacks();
@@ -83,9 +93,17 @@ export default function PacksPage() {
     }
   };
 
-  const handleSubscribe = (_pack: Pack) => {
-    // TODO: Implement subscription logic
-    void _pack;
+  const handleSubscribe = async (pack: Pack) => {
+    try {
+      setError(null);
+      await subscribeToPack(Number(pack.id));
+      setSubscribedPackName(pack.title);
+      setSuccessDialogOpen(true);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to subscribe to pack"
+      );
+    }
   };
 
   const handleModalSuccess = () => {
@@ -178,6 +196,36 @@ export default function PacksPage() {
             >
               <Trash2Icon className="mr-2 w-4 h-4" />
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="rounded-full bg-green-100 dark:bg-green-900/20 p-3">
+                <CheckCircle2Icon className="h-8 w-8 text-green-600 dark:text-green-400" />
+              </div>
+              <DialogTitle>Subscription Successful!</DialogTitle>
+              <DialogDescription className="text-base">
+                You have successfully subscribed to{" "}
+                <span className="font-semibold text-foreground">
+                  &quot;{subscribedPackName}&quot;
+                </span>
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setSuccessDialogOpen(false);
+                setSubscribedPackName(null);
+              }}
+              className="w-full sm:w-auto"
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -157,6 +157,7 @@ export interface Pack {
   image: string;
   active: boolean;
   price: string;
+  total_hours?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -174,6 +175,7 @@ export interface CreatePackPayload {
   image?: File | string;
   active: boolean;
   price: string;
+  total_hours?: number;
 }
 
 export async function getPacks(page = 1): Promise<PaginatedPackResponse> {
@@ -195,6 +197,10 @@ export async function createPack(
   formData.append("description", payload.description);
   formData.append("active", payload.active.toString());
   formData.append("price", payload.price);
+
+  if (payload["total_hours"] !== undefined) {
+    formData.append("total_hours", payload["total_hours"].toString());
+  }
 
   if (payload.image instanceof File) {
     formData.append("image", payload.image);
@@ -243,6 +249,10 @@ export async function updatePack(
     formData.append("price", payload.price);
   }
 
+  if (payload["total_hours"] !== undefined) {
+    formData.append("total_hours", payload["total_hours"].toString());
+  }
+
   if (payload.image instanceof File) {
     formData.append("image", payload.image);
   }
@@ -286,4 +296,10 @@ export async function deletePack(id: number) {
   }
 
   return response;
+}
+
+export async function subscribeToPack(packId: number) {
+  return apiFetch(`/subscriptions/packs/${packId}/subscribe/`, {
+    method: "POST",
+  });
 }

@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/stores/authStore";
 import { PaginatedVideoResponse, Video } from "@/types/api";
+import { Order } from "@/types/api";
 
 import { apiFetch } from "./api";
 
@@ -12,6 +13,10 @@ export interface AnalyticsData {
   confirmed_last_3_months: number;
   total_students: number;
   total_teachers: number;
+}
+
+interface OrdersResponse {
+  results: Order[];
 }
 
 export async function cancelBookingById(bookingId: number) {
@@ -301,5 +306,11 @@ export async function deletePack(id: number) {
 export async function subscribeToPack(packId: number) {
   return apiFetch(`/subscriptions/packs/${packId}/subscribe/`, {
     method: "POST",
+  });
+}
+
+export async function getOrders(): Promise<OrdersResponse> {
+  return apiFetch("/subscriptions/orders/", {
+    method: "GET",
   });
 }

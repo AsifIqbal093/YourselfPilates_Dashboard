@@ -10,6 +10,7 @@ import {
   IconListLetters,
   IconReport,
   IconSettings,
+  IconShoppingCart,
   IconUsers,
   IconVideo,
 } from "@tabler/icons-react";
@@ -76,6 +77,11 @@ const data = {
       title: "Packs",
       url: "/packs",
       icon: IconCalendar,
+    },
+    {
+      title: "Orders",
+      url: "/order",
+      icon: IconShoppingCart,
     },
   ],
   navClouds: [

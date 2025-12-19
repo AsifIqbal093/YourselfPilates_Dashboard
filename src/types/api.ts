@@ -72,3 +72,17 @@ export interface PaginatedVideoResponse {
   previous: string | null;
   results: Video[];
 }
+
+export interface Order {
+  id: number;
+  user_name: string;
+  user_email: string;
+  pack_details: {
+    title: string;
+    total_hours: number;
+  };
+  amount: string;
+  payment_method: string;
+  payment_status: string;
+  created_at: string;
+}

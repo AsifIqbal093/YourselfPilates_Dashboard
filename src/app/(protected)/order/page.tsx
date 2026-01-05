@@ -89,7 +89,7 @@ const OrdersPage = () => {
                   <TableCell>{order.user_email}</TableCell>
                   <TableCell>{order.pack_details.title}</TableCell>
                   <TableCell>{order.pack_details.total_hours}</TableCell>
-                  <TableCell>${parseFloat(order.amount).toFixed(2)}</TableCell>
+                  <TableCell>Є{parseFloat(order.amount).toFixed(2)}</TableCell>
                   <TableCell className="capitalize">
                     {order.payment_method}
                   </TableCell>

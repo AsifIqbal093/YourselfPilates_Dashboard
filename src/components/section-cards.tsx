@@ -83,8 +83,8 @@ export function SectionCards() {
             <IconTrendingUp className="size-4" />
           </div>
           <div className="text-muted-foreground">
-            {analytics.total_confirmed_bookings} confirmed,{" "}
-            {analytics.total_canceled_bookings} canceled
+            {analytics.confirmed_bookings} confirmed,{" "}
+            {analytics.cancelled_bookings} canceled
           </div>
         </CardFooter>
       </Card>
@@ -134,7 +134,7 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Confirmed Bookings</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {analytics.total_confirmed_bookings}
+            {analytics.confirmed_bookings}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">

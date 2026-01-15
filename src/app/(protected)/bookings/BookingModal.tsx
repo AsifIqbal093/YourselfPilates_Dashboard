@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -56,31 +56,37 @@ export function BookingModal({
   const initialProfessorRef = React.useRef<number | null>(null);
   const initialStudentsSetRef = React.useRef(false);
 
-  const defaultValues: BookingFormValues = initialData
-    ? {
-        title: initialData.title || "",
-        professor: initialData.professor_details?.id || 0,
-        students:
-          initialData.student_details &&
-          Array.isArray(initialData.student_details)
-            ? (initialData.student_details as { id: number }[]).map((s) => s.id)
-            : [],
-        booking_date: initialData.booking_date || "",
-        time_slot: initialData.time_slot || "",
-        notes: initialData.notes || "",
-        status: initialData.status || "confirmed",
-        // approve: initialData.approve ?? false,
-      }
-    : {
-        title: "",
-        professor: 0,
-        students: [],
-        booking_date: "",
-        time_slot: "",
-        notes: "",
-        status: "confirmed",
-        // approve: false,
-      };
+  const defaultValues: BookingFormValues = useMemo(
+    () =>
+      initialData
+        ? {
+            title: initialData.title || "",
+            professor: initialData.professor_details?.id || 0,
+            students:
+              initialData.student_details &&
+              Array.isArray(initialData.student_details)
+                ? (initialData.student_details as { id: number }[]).map(
+                    (s) => s.id
+                  )
+                : [],
+            booking_date: initialData.booking_date || "",
+            time_slot: initialData.time_slot || "",
+            notes: initialData.notes || "",
+            status: initialData.status || "confirmed",
+            // approve: initialData.approve ?? false,
+          }
+        : {
+            title: "",
+            professor: 0,
+            students: [],
+            booking_date: "",
+            time_slot: "",
+            notes: "",
+            status: "confirmed",
+            // approve: false,
+          },
+    [initialData]
+  );
 
   const {
     register,
@@ -179,7 +185,7 @@ export function BookingModal({
     reset(defaultValues);
     setError(null);
     setSuccess(false);
-  }, [initialData, open]);
+  }, [initialData, open, reset, defaultValues]);
 
   // Handle multi-select change
   // eslint-disable-next-line

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 "use client";
 import { EventClickArg } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";

@@ -69,7 +69,7 @@ class AuthService {
 
     if (!response.ok) {
       // If refresh fails, logout the user
-      useAuthStore.getState().logout();
+      window.location.href = "/logout";
       throw new Error("Token refresh failed");
     }
 
@@ -85,7 +85,7 @@ class AuthService {
     url: string,
     options: RequestInit = {}
   ): Promise<Response> {
-    const { accessToken, refreshToken, logout } = useAuthStore.getState();
+    const { accessToken, refreshToken } = useAuthStore.getState();
 
     if (!accessToken || !refreshToken) {
       throw new Error("No authentication tokens available");
@@ -115,7 +115,7 @@ class AuthService {
         });
       } catch (error) {
         // Refresh failed, logout user
-        logout();
+        window.location.href = "/logout";
         throw error;
       }
     }

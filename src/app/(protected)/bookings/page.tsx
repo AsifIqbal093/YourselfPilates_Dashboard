@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 "use client";
 import { PencilIcon } from "lucide-react";
 import { Trash2Icon } from "lucide-react";

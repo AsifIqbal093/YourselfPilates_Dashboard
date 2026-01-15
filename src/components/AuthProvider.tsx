@@ -2,6 +2,7 @@
 // components/AuthProvider.tsx
 "use client";
 
+import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
 import { authService } from "@/lib/authService";
@@ -13,6 +14,7 @@ export default function AuthProvider({
   children: React.ReactNode;
 }) {
   const { accessToken, refreshToken, logout, setLoading } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -28,7 +30,7 @@ export default function AuthProvider({
           await authService.refreshToken(refreshToken);
         } catch (error) {
           console.error("Token refresh failed:", error);
-          logout();
+          router.push("/logout");
         } finally {
           setLoading(false);
         }
@@ -38,7 +40,7 @@ export default function AuthProvider({
     };
 
     initializeAuth();
-  }, [accessToken, refreshToken, logout, setLoading]);
+  }, [accessToken, refreshToken, logout, setLoading, router]);
 
   // Set up automatic token refresh
   useEffect(() => {
@@ -60,25 +62,25 @@ export default function AuthProvider({
             scheduleRefresh(); // Schedule next refresh
           } catch (error) {
             console.error("Automatic token refresh failed:", error);
-            logout();
+            router.push("/logout");
           }
         }, refreshTime);
 
         return () => clearTimeout(timeoutId);
       } catch (error) {
         console.error("Error scheduling token refresh:", error);
-        logout();
+        router.push("/logout");
       }
     };
 
     const cleanup = scheduleRefresh();
     return cleanup;
-  }, [accessToken, refreshToken, logout]);
+  }, [accessToken, refreshToken, logout, router]);
 
   // Sync auth state with cookies for middleware
   useEffect(() => {
     if (accessToken) {
-      document.cookie = `auth-token=${accessToken}; path=/; max-age=${60 * 60}`; // 1 hour
+      document.cookie = `auth-token=${accessToken}; path=/; max-age=${12 * 60 * 60}`; // 12 hours
     } else {
       document.cookie =
         "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";

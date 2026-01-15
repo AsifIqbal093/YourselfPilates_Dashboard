@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useEffect, useState } from "react";

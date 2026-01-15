@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 "use client";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";

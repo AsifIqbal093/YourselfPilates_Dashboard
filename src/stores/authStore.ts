@@ -22,7 +22,8 @@ interface AuthState {
     full_name: string;
     role: string;
   }) => void;
-  logout: () => void;
+  // eslint-disable-next-line no-unused-vars
+  logout: (_redirect?: boolean) => void;
   // eslint-disable-next-line
   setTokens: (access: string, refresh: string) => void;
   // eslint-disable-next-line
@@ -54,7 +55,7 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      logout: () => {
+      logout: (redirect = true) => {
         set({
           user: null,
           accessToken: null,
@@ -67,8 +68,10 @@ export const useAuthStore = create<AuthState>()(
           "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         // Remove from localStorage if you persist there
         localStorage.removeItem("auth-storage");
-        // Redirect to login
-        window.location.href = "/login";
+        // Redirect if requested
+        if (redirect) {
+          window.location.href = "/login";
+        }
       },
 
       setTokens: (access, refresh) => {

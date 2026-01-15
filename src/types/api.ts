@@ -33,6 +33,8 @@ export interface Professor {
   student_ids?: number[];
   students?: Student[];
   is_active?: boolean;
+  remaining_hours?: number;
+  used_hours?: number;
 }
 
 export interface Slot {

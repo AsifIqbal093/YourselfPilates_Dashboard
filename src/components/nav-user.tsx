@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  IconDotsVertical,
-  IconLogout,
-  IconNotification,
-  IconUserCircle,
-} from "@tabler/icons-react";
+import { IconDotsVertical, IconLogout } from "@tabler/icons-react";
 import Image, { StaticImageData } from "next/image";
-
-import { useAuthStore } from "@/stores/authStore";
+import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import {
@@ -37,7 +31,7 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
-  const { logout } = useAuthStore();
+  const router = useRouter();
 
   return (
     <SidebarMenu>
@@ -93,23 +87,23 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem>
                 <IconUserCircle />
                 Account
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               {/* <DropdownMenuItem>
                 <IconCreditCard />
                 Billing
               </DropdownMenuItem> */}
-              <DropdownMenuItem>
+              {/* <DropdownMenuItem>
                 <IconNotification />
                 Notifications
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => logout()}
+              onClick={() => router.push("/logout")}
             >
               <IconLogout />
               Log out

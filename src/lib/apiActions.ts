@@ -4,15 +4,34 @@ import { Order } from "@/types/api";
 
 import { apiFetch } from "./api";
 
+export interface VisitorData {
+  date: string;
+  count: number;
+}
+
+export interface VisitorStats {
+  last_7_days: VisitorData[];
+  last_30_days: VisitorData[];
+  last_3_months: VisitorData[];
+}
+
 export interface AnalyticsData {
   total_bookings: number;
-  total_confirmed_bookings: number;
-  total_canceled_bookings: number;
+  bookings_this_month: number;
+  bookings_this_week: number;
+  confirmed_bookings: number;
+  cancelled_bookings: number;
   confirmed_last_7_days: number;
   confirmed_last_30_days: number;
   confirmed_last_3_months: number;
-  total_students: number;
   total_teachers: number;
+  active_teachers: number;
+  registered_teachers: number;
+  total_students: number;
+  active_students: number;
+  registered_students: number;
+  teacher_visitors: VisitorStats;
+  student_visitors: VisitorStats;
 }
 
 interface OrdersResponse {

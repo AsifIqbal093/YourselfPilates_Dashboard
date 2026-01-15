@@ -142,6 +142,8 @@ export default function TeachersPage() {
                 <TableHead>City</TableHead>
                 <TableHead>Students</TableHead>
                 <TableHead>Contact Number</TableHead>
+                <TableHead>Purchased Hours</TableHead>
+                <TableHead>Used Hours</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Approval</TableHead>
                 <TableHead>Actions</TableHead>
@@ -172,6 +174,8 @@ export default function TeachersPage() {
                     )}
                   </TableCell>
                   <TableCell>{teacher.contact_number || "-"}</TableCell>
+                  <TableCell>{teacher.remaining_hours}</TableCell>
+                  <TableCell>{teacher.used_hours}</TableCell>
                   <TableCell>
                     {teacher.is_active ? (
                       <Badge
@@ -189,6 +193,7 @@ export default function TeachersPage() {
                       </Badge>
                     )}
                   </TableCell>
+
                   <TableCell>
                     {teacher.is_active ? (
                       <Button

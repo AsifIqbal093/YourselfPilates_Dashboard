@@ -33,6 +33,7 @@ export interface Professor {
   student_ids?: number[];
   students?: Student[];
   is_active?: boolean;
+  total_purchased_hours?: number | string;
   remaining_hours?: number;
   used_hours?: number;
 }

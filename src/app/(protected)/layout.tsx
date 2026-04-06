@@ -6,7 +6,6 @@ import React from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { isTokenExpired } from "@/lib/jwt";
 
 export const metadata: Metadata = {
   title: "Welcome | Yourself Pilates",
@@ -22,7 +21,7 @@ export default async function ProtectedLayout({
   const cookieStore = await cookies();
   const authToken = cookieStore.get("auth-token")?.value;
 
-  if (!authToken || isTokenExpired(authToken)) {
+  if (!authToken) {
     redirect("/login");
   }
 

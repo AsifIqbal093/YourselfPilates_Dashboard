@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/stores/authStore";
-import { PaginatedVideoResponse, Video } from "@/types/api";
+import { PaginatedResponse, PaginatedVideoResponse, Video } from "@/types/api";
 import { Order } from "@/types/api";
 
 import { apiFetch } from "./api";
@@ -34,9 +34,7 @@ export interface AnalyticsData {
   student_visitors: VisitorStats;
 }
 
-interface OrdersResponse {
-  results: Order[];
-}
+type OrdersResponse = PaginatedResponse<Order>;
 
 export async function cancelBookingById(bookingId: number) {
   return apiFetch(`/booking/bookings/${bookingId}/reject/`, {
@@ -64,7 +62,7 @@ export async function deleteVideo(id: number) {
     {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+        Authorization: `Token ${useAuthStore.getState().token}`,
       },
       credentials: "include",
     }
@@ -85,7 +83,7 @@ export async function deleteBooking(id: number) {
     {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+        Authorization: `Token ${useAuthStore.getState().token}`,
       },
       credentials: "include",
     }
@@ -105,7 +103,7 @@ export async function deleteStudent(id: number) {
     {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+        Authorization: `Token ${useAuthStore.getState().token}`,
       },
       credentials: "include",
     }
@@ -125,7 +123,7 @@ export async function deleteProfessor(id: number) {
     {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+        Authorization: `Token ${useAuthStore.getState().token}`,
       },
       credentials: "include",
     }
@@ -154,13 +152,13 @@ export async function uploadVideo({
   formData.append("description", description);
 
   // Use fetch directly for multipart/form-data
-  const { accessToken } = useAuthStore.getState();
+  const { token } = useAuthStore.getState();
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/dashboard/videos/`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Token ${token}`,
         // 'Content-Type' should NOT be set for FormData
       },
       body: formData,
@@ -213,8 +211,8 @@ export async function getPackById(id: number): Promise<Pack> {
 export async function createPack(
   payload: CreatePackPayload & { image?: File }
 ): Promise<Pack> {
-  const { accessToken } = useAuthStore.getState();
-  if (!accessToken) throw new Error("No access token");
+  const { token } = useAuthStore.getState();
+  if (!token) throw new Error("No authentication token");
 
   const formData = new FormData();
   formData.append("title", payload.title);
@@ -235,7 +233,7 @@ export async function createPack(
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Token ${token}`,
         // Don't set Content-Type for FormData, browser will set it with boundary
       },
       body: formData,
@@ -255,8 +253,8 @@ export async function updatePack(
   id: number,
   payload: Partial<CreatePackPayload> & { image?: File }
 ): Promise<Pack> {
-  const { accessToken } = useAuthStore.getState();
-  if (!accessToken) throw new Error("No access token");
+  const { token } = useAuthStore.getState();
+  if (!token) throw new Error("No authentication token");
 
   const formData = new FormData();
 
@@ -286,7 +284,7 @@ export async function updatePack(
     {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Token ${token}`,
         // Don't set Content-Type for FormData, browser will set it with boundary
       },
       body: formData,
@@ -308,7 +306,7 @@ export async function deletePack(id: number) {
     {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${useAuthStore.getState().accessToken}`,
+        Authorization: `Token ${useAuthStore.getState().token}`,
       },
       credentials: "include",
     }
@@ -328,8 +326,13 @@ export async function subscribeToPack(packId: number) {
   });
 }
 
-export async function getOrders(): Promise<OrdersResponse> {
-  return apiFetch("/subscriptions/orders/", {
-    method: "GET",
-  });
+export async function getOrders(params?: {
+  page?: number;
+}): Promise<OrdersResponse> {
+  const page = params?.page ?? 1;
+
+  const qs = new URLSearchParams();
+  qs.set("page", String(page));
+
+  return apiFetch(`/subscriptions/orders/?${qs.toString()}`, { method: "GET" });
 }

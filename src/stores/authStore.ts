@@ -6,26 +6,26 @@ interface User {
   email: string;
   full_name: string;
   role: string;
+  user_id: string;
 }
 
 interface AuthState {
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   // eslint-disable-next-line
-  login: (tokens: {
-    access: string;
-    refresh: string;
+  login: (data: {
+    token: string;
     email: string;
     full_name: string;
     role: string;
+    user_id: string;
   }) => void;
   // eslint-disable-next-line no-unused-vars
   logout: (_redirect?: boolean) => void;
   // eslint-disable-next-line
-  setTokens: (access: string, refresh: string) => void;
+  setToken: (token: string) => void;
   // eslint-disable-next-line
   setLoading: (loading: boolean) => void;
 }
@@ -34,22 +34,21 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      accessToken: null,
-      refreshToken: null,
+      token: null,
       isAuthenticated: false,
       isLoading: false,
 
-      login: (tokens) => {
+      login: (data) => {
         const user = {
-          email: tokens.email,
-          full_name: tokens.full_name,
-          role: tokens.role,
+          email: data.email,
+          full_name: data.full_name,
+          role: data.role,
+          user_id: data.user_id,
         };
 
         set({
           user,
-          accessToken: tokens.access,
-          refreshToken: tokens.refresh,
+          token: data.token,
           isAuthenticated: true,
           isLoading: false,
         });
@@ -58,8 +57,7 @@ export const useAuthStore = create<AuthState>()(
       logout: (redirect = true) => {
         set({
           user: null,
-          accessToken: null,
-          refreshToken: null,
+          token: null,
           isAuthenticated: false,
           isLoading: false,
         });
@@ -74,10 +72,9 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      setTokens: (access, refresh) => {
+      setToken: (token) => {
         set({
-          accessToken: access,
-          refreshToken: refresh,
+          token,
         });
       },
 
@@ -89,8 +86,7 @@ export const useAuthStore = create<AuthState>()(
       name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
+        token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
     }

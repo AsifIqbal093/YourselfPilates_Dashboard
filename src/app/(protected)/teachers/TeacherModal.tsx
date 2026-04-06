@@ -20,9 +20,8 @@ interface TeacherModalProps {
   initialData?: Professor | null;
 }
 
-const teacherSchema = z.object({
+const commonTeacherSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(6, "Password is required").optional(),
   full_name: z.string().min(1, "Full name is required"),
   contact_number: z.string().optional(),
   street: z.string().optional(),
@@ -33,7 +32,20 @@ const teacherSchema = z.object({
   // photo: z.any().optional(),
 });
 
-type TeacherFormValues = z.infer<typeof teacherSchema>;
+const addTeacherSchema = commonTeacherSchema.extend({
+  password: z.string().min(6, "Password is required"),
+});
+
+const editTeacherSchema = commonTeacherSchema.extend({
+  password: z
+    .union([
+      z.string().min(6, "Password must be at least 6 characters"),
+      z.literal(""),
+    ])
+    .optional(),
+});
+
+type TeacherFormValues = z.infer<typeof editTeacherSchema>;
 
 export function TeacherModal({
   open,
@@ -48,12 +60,11 @@ export function TeacherModal({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TeacherFormValues>({
-    resolver: zodResolver(
-      isEdit ? teacherSchema.omit({ password: true }) : teacherSchema
-    ),
+    resolver: zodResolver(isEdit ? editTeacherSchema : addTeacherSchema),
     defaultValues: isEdit
       ? {
           email: initialData?.email || "",
+          password: "",
           full_name: initialData?.full_name || "",
           contact_number: initialData?.contact_number || "",
           street: initialData?.street || "",
@@ -83,6 +94,7 @@ export function TeacherModal({
       isEdit
         ? {
             email: initialData?.email || "",
+            password: "",
             full_name: initialData?.full_name || "",
             contact_number: initialData?.contact_number || "",
             street: initialData?.street || "",
@@ -121,8 +133,8 @@ export function TeacherModal({
         country: data.country || "",
         zipcode: data.zipcode || "",
       };
-      if (!isEdit) {
-        payload.password = data.password || "";
+      if (data.password) {
+        payload.password = data.password;
       }
       // Add student_ids if needed: payload.student_ids = ...
 
@@ -172,17 +184,19 @@ export function TeacherModal({
             <span className="text-red-500 text-xs">{errors.email.message}</span>
           )}
         </div>
-        {!isEdit && (
-          <div>
-            <Label>Password</Label>
-            <Input type="password" {...register("password")} />
-            {errors.password && (
-              <span className="text-red-500 text-xs">
-                {errors.password.message}
-              </span>
-            )}
-          </div>
-        )}
+        <div>
+          <Label>{isEdit ? "Password (optional)" : "Password"}</Label>
+          <Input
+            type="password"
+            placeholder={isEdit ? "Leave blank to keep current password" : ""}
+            {...register("password")}
+          />
+          {errors.password && (
+            <span className="text-red-500 text-xs">
+              {errors.password.message}
+            </span>
+          )}
+        </div>
         <div>
           <Label>Contact Number</Label>
           <Input {...register("contact_number")} />

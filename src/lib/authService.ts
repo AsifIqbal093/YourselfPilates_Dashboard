@@ -11,26 +11,23 @@ interface LoginCredentials {
 }
 
 interface LoginResponse {
-  refresh: string;
-  access: string;
+  token: string;
   email: string;
   full_name: string;
   role: string;
+  user_id: string;
 }
 
-interface RefreshResponse {
-  access: string;
-}
+type AuthRequestInit = RequestInit & {
+  _retry?: boolean;
+};
 
 class AuthService {
-  private refreshPromise: Promise<string> | null = null;
-
+  /* ===================== LOGIN ===================== */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     const response = await fetch(`${API_BASE_URL}/user/login/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
     });
 
@@ -42,99 +39,39 @@ class AuthService {
     return response.json();
   }
 
-  async refreshToken(refreshToken: string): Promise<string> {
-    // If there's already a refresh in progress, wait for it
-    if (this.refreshPromise) {
-      return this.refreshPromise;
-    }
-
-    this.refreshPromise = this.performRefresh(refreshToken);
-
-    try {
-      const newAccessToken = await this.refreshPromise;
-      return newAccessToken;
-    } finally {
-      this.refreshPromise = null;
-    }
-  }
-
-  private async performRefresh(refreshToken: string): Promise<string> {
-    const response = await fetch(`${API_BASE_URL}/user/token/refresh/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refresh: refreshToken }),
-    });
-
-    if (!response.ok) {
-      // If refresh fails, logout the user
-      window.location.href = "/logout";
-      throw new Error("Token refresh failed");
-    }
-
-    const data: RefreshResponse = await response.json();
-
-    // Update tokens in store
-    useAuthStore.getState().setTokens(data.access, refreshToken);
-
-    return data.access;
-  }
-
+  /* ===================== AUTH REQUEST ===================== */
   async makeAuthenticatedRequest(
     url: string,
-    options: RequestInit = {}
+    options: AuthRequestInit = {}
   ): Promise<Response> {
-    const { accessToken, refreshToken } = useAuthStore.getState();
+    const { token, logout } = useAuthStore.getState();
 
-    if (!accessToken || !refreshToken) {
-      throw new Error("No authentication tokens available");
+    if (!token) {
+      logout();
+      throw new Error("No authentication token");
     }
 
-    // Try the request with current access token
+    const fetchOptions = options;
     const response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       headers: {
-        ...options.headers,
-        Authorization: `Bearer ${accessToken}`,
+        ...fetchOptions.headers,
+        Authorization: `Token ${token}`,
       },
     });
 
-    // If token is expired, try to refresh
+    // Handle 401 Unauthorized
     if (response.status === 401) {
-      try {
-        const newAccessToken = await this.refreshToken(refreshToken);
-
-        // Retry the original request with new token
-        return fetch(url, {
-          ...options,
-          headers: {
-            ...options.headers,
-            Authorization: `Bearer ${newAccessToken}`,
-          },
-        });
-      } catch (error) {
-        // Refresh failed, logout user
-        window.location.href = "/logout";
-        throw error;
-      }
+      logout();
+      throw new Error("Session expired");
     }
 
     return response;
   }
 
+  /* ===================== LOGOUT ===================== */
   logout(): void {
-    useAuthStore.getState().logout();
-  }
-
-  isTokenExpired(token: string): boolean {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const currentTime = Math.floor(Date.now() / 1000);
-      return payload.exp < currentTime;
-    } catch {
-      return true;
-    }
+    useAuthStore.getState().logout(true);
   }
 }
 

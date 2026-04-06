@@ -1,6 +1,6 @@
 "use client";
+
 import { PencilIcon } from "lucide-react";
-import { Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 import swal from "sweetalert";
 
@@ -10,7 +10,6 @@ import {
   Pagination,
   PaginationContent,
   PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
@@ -31,46 +30,57 @@ import { TeacherModal } from "./TeacherModal";
 
 export default function TeachersPage() {
   const [teachers, setTeachers] = useState<Professor[]>([]);
-  const [count, setCount] = useState(0);
-  const [page, setPage] = useState(1);
+
+  // ✅ Backend pagination state
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [prevUrl, setPrevUrl] = useState<string | null>(null);
+
   const [modal, setModal] = useState<{ open: boolean; data: Professor | null }>(
     {
       open: false,
       data: null,
     }
   );
+
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
 
-  async function fetchTeachers(page: number) {
+  // ✅ Fetch (Backend Controlled)
+  async function fetchTeachers(url: string = "/user/users/?role=professor") {
     setLoading(true);
     try {
-      const res: PaginatedResponse<Professor> = await apiFetch(
-        `/user/users/?role=professor&page=${page}`
-      );
+      const res: PaginatedResponse<Professor> = await apiFetch(url);
+
       setTeachers(res.results);
-      setCount(res.count);
+      setNextUrl(res.next);
+      setPrevUrl(res.previous);
+    } catch (error) {
+      console.error("Fetch error:", error);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchTeachers(page);
-  }, [page]);
+    fetchTeachers();
+  }, []);
 
   const openAdd = () => setModal({ open: true, data: null });
+
   const openEdit = (teacher: Professor) =>
     setModal({ open: true, data: teacher });
 
+  // ✅ Approval Logic
   const handleApproval = async (userId: number, approve: boolean) => {
     setActionLoadingId(userId);
     try {
       const endpoint = approve
         ? `/user/users/approve/?user_id=${userId}`
         : `/user/users/cancel/?user_id=${userId}`;
+
       await apiFetch(endpoint, { method: "GET" });
+
       swal({
         title: approve ? "Approved!" : "Approval Cancelled!",
         text: approve
@@ -78,7 +88,8 @@ export default function TeachersPage() {
           : "Approval cancelled successfully!",
         icon: "success",
       });
-      await fetchTeachers(page);
+
+      fetchTeachers();
     } catch (error: unknown) {
       swal({
         title: "Error!",
@@ -90,24 +101,30 @@ export default function TeachersPage() {
     }
   };
 
+  // ✅ Delete Logic
   const handleDeleteProfessor = async (prof: Professor) => {
     const confirm = await swal({
       title: "Are you sure?",
-      text: `This will permanently delete the professor ${prof.full_name}.`,
+      text: `This will permanently delete ${prof.full_name}.`,
       icon: "warning",
       buttons: ["Cancel", "Delete"],
       dangerMode: true,
     });
+
     if (!confirm) return;
+
     setDeleteLoadingId(prof.id ?? null);
+
     try {
       await deleteProfessor(prof.id!);
+
       swal({
         title: "Deleted!",
         text: "Professor deleted successfully!",
         icon: "success",
       });
-      await fetchTeachers(page);
+
+      fetchTeachers();
     } catch (error) {
       swal({
         title: "Error!",
@@ -119,16 +136,15 @@ export default function TeachersPage() {
     }
   };
 
-  const totalPages = Math.ceil(count / 10); // assuming 10 per page
-
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2>Teachers</h2>
-        <Button onClick={openAdd} className="cursor-pointer">
-          Add Teacher
-        </Button>
+    <div className="p-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4 mx-2">
+        <h2 className="text-2xl font-bold">Professors</h2>
+        <Button onClick={openAdd}>Add Professor</Button>
       </div>
+
+      {/* Loader */}
       {loading ? (
         <TableLoader />
       ) : (
@@ -143,150 +159,151 @@ export default function TeachersPage() {
                 <TableHead>Students</TableHead>
                 <TableHead>Contact Number</TableHead>
                 <TableHead>Purchased Hours</TableHead>
+                <TableHead>Remaining Hours</TableHead>
                 <TableHead>Used Hours</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Approval</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {teachers.map((teacher) => (
-                <TableRow key={teacher.email}>
-                  <TableCell>{teacher.email}</TableCell>
-                  <TableCell>{teacher.full_name}</TableCell>
-                  <TableCell>{teacher.role}</TableCell>
-                  <TableCell>{teacher.city || "-"}</TableCell>
-                  <TableCell>
-                    {(teacher.students as Student[]) &&
-                    (teacher.students as Student[]).length > 0 ? (
-                      <div className="max-h-24 overflow-y-auto space-y-1 pr-2">
-                        {(teacher.students as Student[]).map((student) => (
-                          <div
-                            key={student.id}
-                            className="bg-muted rounded px-2 py-1 text-xs whitespace-nowrap"
-                          >
-                            {student.full_name}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <span>-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>{teacher.contact_number || "-"}</TableCell>
-                  <TableCell>{teacher.remaining_hours}</TableCell>
-                  <TableCell>{teacher.used_hours}</TableCell>
-                  <TableCell>
-                    {teacher.is_active ? (
-                      <Badge
-                        variant="secondary"
-                        className="bg-green-500 text-white border-green-500"
-                      >
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="destructive"
-                        className="bg-red-500 text-white border-red-500"
-                      >
-                        Inactive
-                      </Badge>
-                    )}
-                  </TableCell>
 
-                  <TableCell>
-                    {teacher.is_active ? (
-                      <Button
-                        className="cursor-pointer"
-                        variant="destructive"
-                        size="sm"
-                        disabled={actionLoadingId === teacher.id}
-                        onClick={() => handleApproval(teacher.id!, false)}
-                      >
-                        {actionLoadingId === teacher.id
-                          ? "Cancelling..."
-                          : "Cancel Approval"}
-                      </Button>
-                    ) : (
-                      <Button
-                        className="cursor-pointer"
-                        variant="secondary"
-                        size="sm"
-                        disabled={actionLoadingId === teacher.id}
-                        onClick={() => handleApproval(teacher.id!, true)}
-                      >
-                        {actionLoadingId === teacher.id
-                          ? "Approving..."
-                          : "Approve"}
-                      </Button>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="cursor-pointer"
-                        onClick={() => openEdit(teacher)}
-                      >
-                        <PencilIcon className="w-4 h-4" /> Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-red-500 text-red-600 hover:bg-red-500 hover:text-white hover:border-red-500 cursor-pointer"
-                        disabled={deleteLoadingId === teacher.id}
-                        onClick={() => handleDeleteProfessor(teacher)}
-                      >
-                        {deleteLoadingId === teacher.id ? (
-                          "Deleting..."
-                        ) : (
-                          <>
-                            <Trash2Icon className="w-4 h-4 mr-1" /> Delete
-                          </>
-                        )}
-                      </Button>
-                    </div>
+            <TableBody>
+              {teachers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={12} className="text-center">
+                    No professors found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                teachers.map((teacher) => (
+                  <TableRow key={teacher.id}>
+                    <TableCell>{teacher.email}</TableCell>
+                    <TableCell>{teacher.full_name}</TableCell>
+                    <TableCell>{teacher.role}</TableCell>
+                    <TableCell>{teacher.city || "-"}</TableCell>
+
+                    <TableCell>
+                      {(teacher.students as Student[])?.length ? (
+                        <div className="max-h-24 overflow-y-auto space-y-1 pr-2">
+                          {(teacher.students as Student[]).map((student) => (
+                            <div
+                              key={student.id}
+                              className="bg-muted rounded px-2 py-1 text-xs"
+                            >
+                              {student.full_name}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+
+                    <TableCell>{teacher.contact_number || "-"}</TableCell>
+                    <TableCell>
+                      {teacher.total_purchased_hours ?? "-"}
+                    </TableCell>
+                    <TableCell>{teacher.remaining_hours}</TableCell>
+                    <TableCell>{teacher.used_hours}</TableCell>
+
+                    <TableCell>
+                      {teacher.is_active ? (
+                        <Badge className="bg-green-500 text-white">
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-red-500 text-white">
+                          Inactive
+                        </Badge>
+                      )}
+                    </TableCell>
+
+                    {/* Approval */}
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        disabled={actionLoadingId === teacher.id}
+                        variant={
+                          teacher.is_active ? "destructive" : "secondary"
+                        }
+                        onClick={() =>
+                          handleApproval(teacher.id!, !teacher.is_active)
+                        }
+                      >
+                        {actionLoadingId === teacher.id
+                          ? "Processing..."
+                          : teacher.is_active
+                            ? "Cancel Approval"
+                            : "Approve"}
+                      </Button>
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEdit(teacher)}
+                        >
+                          <PencilIcon className="w-4 h-4" /> Edit
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-500 text-red-600 hover:bg-red-500 hover:text-white"
+                          disabled={deleteLoadingId === teacher.id}
+                          onClick={() => handleDeleteProfessor(teacher)}
+                        >
+                          {deleteLoadingId === teacher.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+
+          {/* ✅ Backend Pagination */}
           <Pagination>
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (prevUrl) fetchTeachers(prevUrl);
+                  }}
+                  className={!prevUrl ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              {[...Array(totalPages)].map((_, idx) => (
-                <PaginationItem key={idx}>
-                  <PaginationLink
-                    href="#"
-                    isActive={page === idx + 1}
-                    onClick={() => setPage(idx + 1)}
-                  >
-                    {idx + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+
               <PaginationItem>
                 <PaginationNext
                   href="#"
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (nextUrl) fetchTeachers(nextUrl);
+                  }}
+                  className={!nextUrl ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
         </>
       )}
+
+      {/* Modal */}
       <TeacherModal
         open={modal.open}
         onOpenChange={(open) =>
           setModal({ open, data: open ? modal.data : null })
         }
-        onSuccess={() => fetchTeachers(page)}
+        onSuccess={() => fetchTeachers()}
         initialData={modal.data}
       />
     </div>

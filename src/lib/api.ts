@@ -2,18 +2,30 @@ import { RequestInit } from "next/dist/server/web/spec-extension/request";
 
 import { useAuthStore } from "@/stores/authStore";
 
-export async function apiFetch<T>(url: string, options: RequestInit = {}) {
-  const { accessToken } = useAuthStore.getState();
-  if (!accessToken) throw new Error("No access token");
+type ApiFetchOptions = RequestInit;
+
+export async function apiFetch<T>(url: string, options: ApiFetchOptions = {}) {
+  const { token, logout } = useAuthStore.getState();
+
+  if (!token) {
+    logout();
+    throw new Error("No authentication token");
+  }
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}${url}`, {
     ...options,
     headers: {
       ...options.headers,
-      Authorization: `Bearer ${accessToken}`,
+      Authorization: `Token ${token}`,
       "Content-Type": "application/json",
     },
   });
+
+  // Handle 401 Unauthorized
+  if (res.status === 401) {
+    logout();
+    throw new Error("Session expired");
+  }
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));

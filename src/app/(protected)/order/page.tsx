@@ -15,56 +15,103 @@ import {
 import { getOrders } from "@/lib/apiActions";
 import { Order } from "@/types/api";
 
+/** DRF often omits `?page=1` on the first page — treat missing `page` as page 1. */
+function getPageFromUrl(url: string | null): number | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const p = u.searchParams.get("page");
+    if (!p) return 1;
+    const n = Number(p);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
 const OrdersPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [effectivePageSize, setEffectivePageSize] = useState<number>(5);
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [prevUrl, setPrevUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const perPage = 5;
 
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        const data = await getOrders();
+        const data = await getOrders({ page: currentPage });
         setOrders(data.results || []);
+        setTotalCount(data.count ?? 0);
+        setNextUrl(data.next ?? null);
+        setPrevUrl(data.previous ?? null);
+
+        // If backend ignores page_size, compute total pages from real page size.
+        const resultsLen = (data.results || []).length;
+        if (resultsLen > 0) {
+          // Prefer using a stable page size from the API whenever possible.
+          if (data.next) {
+            setEffectivePageSize(resultsLen);
+          } else if (currentPage === 1) {
+            setEffectivePageSize(resultsLen);
+          }
+        }
+
+        // Keep UI page number aligned with backend pagination URLs
+        const prevPage = getPageFromUrl(data.previous ?? null);
+        const nextPage = getPageFromUrl(data.next ?? null);
+        const derivedCurrent =
+          prevPage !== null
+            ? prevPage + 1
+            : nextPage !== null
+              ? nextPage - 1
+              : 1;
+        if (derivedCurrent !== currentPage) setCurrentPage(derivedCurrent);
       } catch (error) {
         console.error("Failed to fetch orders:", error);
         setOrders([]);
+        setTotalCount(0);
+        setNextUrl(null);
+        setPrevUrl(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, []);
+  }, [currentPage]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(orders.length / perPage);
-  const startIndex = (currentPage - 1) * perPage;
-  const endIndex = startIndex + perPage;
-  const currentOrders = orders.slice(startIndex, endIndex);
+  // Pagination calculations (server-side)
+  const totalPages = Math.max(1, Math.ceil(totalCount / effectivePageSize));
 
   const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1));
+    if (!prevUrl) return;
+    const target = getPageFromUrl(prevUrl);
+    if (!target) return;
+    setCurrentPage(target);
   };
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+    if (!nextUrl) return;
+    const target = getPageFromUrl(nextUrl);
+    if (!target) return;
+    setCurrentPage(target);
   };
 
   if (loading) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Orders</h1>
+        <h1 className="text-2xl font-bold">Orders</h1>
         <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Orders</h1>
+    <div className="px-2">
+      <h1 className="text-2xl font-bold px-2">Orders</h1>
 
       {orders.length === 0 ? (
         <p>No orders found.</p>
@@ -84,7 +131,7 @@ const OrdersPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentOrders.map((order) => (
+              {orders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell>{order.user_name}</TableCell>
                   <TableCell>{order.user_email}</TableCell>
@@ -107,7 +154,7 @@ const OrdersPage = () => {
             <div className="flex justify-center items-center mt-6 space-x-2">
               <Button
                 onClick={handlePrevPage}
-                disabled={currentPage === 1}
+                disabled={loading || !prevUrl}
                 variant="outline"
               >
                 Previous
@@ -117,7 +164,7 @@ const OrdersPage = () => {
               </span>
               <Button
                 onClick={handleNextPage}
-                disabled={currentPage === totalPages}
+                disabled={loading || !nextUrl}
                 variant="outline"
               >
                 Next
